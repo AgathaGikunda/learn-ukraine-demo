@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LEARN Ukraine — Programme MIS Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",Arial,sans-serif;background:#f0f4f8;min-height:100vh}
+.wrap{max-width:1180px;margin:0 auto;padding:14px}
+.hdr{background:linear-gradient(135deg,#003366 0%,#0052A5 100%);border-radius:10px 10px 0 0;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.hdr-left h1{color:#fff;font-size:14px;font-weight:700;margin:0}
+.hdr-left p{color:#90b8e0;font-size:10px;margin-top:2px}
+.hdr-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.bdg{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600}
+.b-sat{background:#166534;color:#bbf7d0}
+.b-sub{background:#854d0e;color:#fef3c7}
+.b-blue{background:#1e40af;color:#bfdbfe}
+.b-grey{background:#374151;color:#e5e7eb}
+
+/* VIEW TOGGLE */
+.view-bar{background:#00204d;padding:8px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,0.08)}
+.view-label{color:#90b8e0;font-size:10px;font-weight:700;white-space:nowrap}
+
+.region-sel{font-size:11px;padding:5px 10px;border:1.5px solid rgba(255,255,255,0.2);border-radius:7px;background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;font-family:inherit}
+.region-sel option{background:#003366;color:#fff}
+.isr-bar{display:flex;gap:10px;align-items:center;margin-left:auto;flex-wrap:wrap}
+.isr-chip{display:flex;align-items:center;gap:4px;font-size:9px;color:#90b8e0}
+.isr-dot{width:8px;height:8px;border-radius:50%}
+
+/* TABS */
+.nav{background:#001833;display:flex;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,0.08)}
+.ntab{padding:8px 14px;color:#6b9bbf;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.15s;user-select:none}
+.ntab:hover{color:#fff}
+.ntab.on{color:#fff;border-bottom-color:#60a5fa}
+
+/* BODY */
+.body{background:#fff;border-radius:0 0 10px 10px;padding:16px}
+.pg{display:none}.pg.on{display:block}
+
+/* MGMT BAR */
+.mgmt-bar{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 13px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mb-label{font-size:10px;font-weight:700;color:#475569;white-space:nowrap}
+.mb-sel{font-size:11px;padding:4px 9px;border:1.5px solid #cbd5e1;border-radius:6px;color:#1e293b;background:#fff;font-family:inherit}
+.mb-tog{display:flex;border:1.5px solid #e2e8f0;border-radius:6px;overflow:hidden}
+.mbt{padding:4px 11px;border:none;background:#fff;font-size:10px;font-weight:600;color:#64748b;cursor:pointer;user-select:none;font-family:inherit;transition:all 0.15s}
+.mbt:hover{background:#f1f5f9}
+.mbt.on{background:#003366;color:#fff}
+.mb-ins{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;margin-left:auto}
+.mi-w{background:#fef9c3;color:#854d0e}
+.mi-a{background:#fee2e2;color:#991b1b}
+.mi-g{background:#dcfce7;color:#166534}
+.mi-b{background:#dbeafe;color:#1e40af}
+
+/* KPI GRID */
+.kg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.kg3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.kc{background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 13px;position:relative;overflow:hidden}
+.kc::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
+.kb::before{background:#0052A5}.kg2::before{background:#16a34a}.ka::before{background:#d97706}
+.kr::before{background:#dc2626}.kp::before{background:#7c3aed}.kt::before{background:#0891b2}
+.kl{font-size:10px;color:#64748b;line-height:1.3;margin-bottom:3px}
+.kv{font-size:20px;font-weight:700;color:#1e293b;line-height:1}
+.ks{font-size:9px;color:#94a3b8;margin-top:2px}
+.kbar{margin-top:6px;background:#f1f5f9;border-radius:3px;height:4px}
+.kf{height:4px;border-radius:3px}
+.kpr{display:flex;justify-content:space-between;font-size:9px;color:#94a3b8;margin-top:2px}
+
+/* LAYOUT GRIDS */
+.g2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;margin-bottom:12px}
+.g2e{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g2r{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;margin-bottom:12px}
+.cc{background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px}
+.ct{font-size:11px;font-weight:700;color:#003366;margin-bottom:8px}
+.sec{font-size:12px;font-weight:700;color:#003366;margin-bottom:8px;margin-top:4px}
+
+/* DLI CARDS */
+.dli-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.dli-card{border-radius:10px;padding:12px 14px;border:1.5px solid}
+.dli-achieved{background:#f0fdf4;border-color:#bbf7d0}
+.dli-exceeded{background:#eff6ff;border-color:#93c5fd}
+.dli-progress{background:#fffbeb;border-color:#fde68a}
+.dli-pending{background:#f8fafc;border-color:#e2e8f0}
+.dli-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.dli-num{font-size:10px;font-weight:700;color:#64748b}
+.dli-alloc{font-size:10px;font-weight:700;color:#003366}
+.dli-title{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:4px}
+.dli-progress-bar{background:#e2e8f0;border-radius:3px;height:5px;margin-bottom:4px}
+.dli-bar-fill{height:5px;border-radius:3px}
+.dli-meta{font-size:9px;color:#64748b}
+.dli-status{display:inline-block;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700}
+.s-ach{background:#dcfce7;color:#166534}
+.s-exc{background:#dbeafe;color:#1e40af}
+.s-prog{background:#fef9c3;color:#854d0e}
+.s-pend{background:#f1f5f9;color:#64748b}
+.dlr-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px}
+.dlr-row:last-child{border-bottom:none}
+.dlr-icon{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0}
+
+/* DISBURSEMENT */
+.disb-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.ds-card{background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid #e2e8f0;text-align:center}
+.ds-val{font-size:18px;font-weight:700;color:#003366}
+.ds-lbl{font-size:9px;color:#64748b;margin-top:2px}
+.ds-sub{font-size:9px;color:#94a3b8;margin-top:1px}
+
+/* UKRAINE MAP */
+.map-svg{width:100%;border-radius:8px;border:1px solid #e2e8f0;background:#dde8f5;display:block}
+
+/* REGIONAL TABLE */
+.rtbl{width:100%;border-collapse:collapse;font-size:11px}
+.rtbl th{background:#003366;color:#fff;padding:6px 9px;text-align:left;font-size:9px;font-weight:600;position:sticky;top:0}
+.rtbl td{padding:5px 9px;border-bottom:1px solid #f1f5f9;color:#1e293b;vertical-align:middle}
+.rtbl tr:hover td{background:#f8fafc}
+.pill{display:inline-block;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:600}
+.p-a{background:#dcfce7;color:#166534}
+.p-e{background:#dbeafe;color:#1e40af}
+.p-p{background:#fef9c3;color:#854d0e}
+.p-r{background:#fee2e2;color:#991b1b}
+.pbar{height:5px;background:#e2e8f0;border-radius:3px}
+.pbar-fill{height:5px;border-radius:3px}
+
+/* KOBO DEMO */
+.pipeline-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.pipe-card{border-radius:10px;padding:12px;border:1.5px solid}
+.pc-kobo{background:#f0fdf4;border-color:#bbf7d0}
+.pc-pbi{background:#eff6ff;border-color:#93c5fd}
+.pc-mgmt{background:#fffbeb;border-color:#fde68a}
+.pipe-icon{font-size:22px;margin-bottom:6px}
+.pipe-title{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:4px}
+.pipe-sub{font-size:10px;color:#64748b;line-height:1.5}
+.arrow-flow{display:flex;align-items:center;justify-content:center;font-size:20px;color:#94a3b8;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+.af-step{text-align:center;font-size:10px;color:#475569}
+.af-step strong{display:block;font-size:11px;color:#003366;margin-bottom:2px}
+.af-arr{color:#94a3b8;font-size:16px}
+.kobo-form{border:2px solid #e2e8f0;border-radius:10px;overflow:hidden;max-width:680px;margin:0 auto}
+.kf-top{padding:8px 14px;display:flex;align-items:center;justify-content:space-between}
+.kf-top span{color:#fff;font-size:12px;font-weight:700}
+.kf-top small{color:rgba(255,255,255,0.7);font-size:10px}
+.kf-meta{padding:8px 14px;border-bottom:1px solid;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kf-sec{padding:10px 14px;border-bottom:1px solid #f1f5f9}
+.kf-sec h4{font-size:11px;font-weight:700;color:#003366;margin-bottom:7px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:6px}
+.f{background:#f8fafc;border-radius:6px;padding:6px 9px}
+.f label{font-size:9px;color:#94a3b8;display:block;margin-bottom:2px}
+.f value{font-size:11px;font-weight:600;color:#1e293b;display:block}
+.gps-row{background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:7px 11px;font-size:10px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.chk{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.ci{display:flex;align-items:center;gap:6px;font-size:10px;padding:4px 8px;border-radius:6px}
+.cy{background:#f0fdf4;color:#166534}
+.cn{background:#fef2f2;color:#991b1b}
+.cico{width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0}
+.pstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:6px}
+.pbox{border-radius:7px;border:1px solid #e2e8f0;aspect-ratio:4/3;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:#94a3b8;font-size:9px}
+.pico{font-size:20px}
+.kf-foot{background:#f8fafc;padding:7px 14px;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#94a3b8}
+.sbadge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700}
+.mc{font-size:10px}
+.mc span{display:block;font-size:9px;color:#64748b}
+.mc strong{font-size:11px}
+
+@media(max-width:700px){.kg{grid-template-columns:1fr 1fr}.g2,.g2e,.g2r{grid-template-columns:1fr}.dli-grid{grid-template-columns:1fr}.pipeline-grid{grid-template-columns:1fr}}
+
+/* PHOTO EVIDENCE */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.photo-card{border-radius:10px;overflow:hidden;border:1.5px solid #e2e8f0;background:#f8fafc;cursor:pointer;transition:all 0.15s}
+.photo-card:hover{box-shadow:0 4px 16px rgba(0,51,102,0.15);transform:translateY(-2px)}
+.photo-frame{position:relative;aspect-ratio:4/3;overflow:hidden}
+.photo-scene{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;flex-direction:column;gap:4px}
+.photo-gps-overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.72);padding:5px 8px}
+.photo-gps-overlay .coord{font-family:monospace;font-size:9px;color:#4ade80;display:block;line-height:1.4}
+.photo-gps-overlay .ts{font-size:8px;color:#94a3b8}
+.photo-verified{position:absolute;top:7px;right:7px;background:#16a34a;color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:20px}
+.photo-meta{padding:8px 10px}
+.photo-meta .pm-title{font-size:10px;font-weight:700;color:#1e293b;margin-bottom:2px}
+.photo-meta .pm-sub{font-size:9px;color:#64748b;line-height:1.4}
+.photo-meta .pm-badge{display:inline-block;margin-top:4px;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:600}
+.evidence-explainer{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.evidence-explainer h4{font-size:11px;font-weight:700;color:#0c4a6e;margin-bottom:6px}
+.ev-points{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ev-point{display:flex;align-items:flex-start;gap:7px;font-size:10px;color:#0c4a6e}
+.ev-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+/* LIGHTBOX */
+.lightbox{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center}
+.lightbox.open{display:flex}
+.lb-inner{background:#1e293b;border-radius:12px;max-width:560px;width:90%;overflow:hidden}
+.lb-photo{position:relative;height:280px;display:flex;align-items:center;justify-content:center;font-size:80px;flex-direction:column;gap:8px}
+.lb-gps-strip{background:#000;padding:8px 14px;font-family:monospace}
+.lb-gps-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.lb-gps-row span{font-size:10px;color:#4ade80}
+.lb-gps-row label{font-size:9px;color:#64748b;min-width:80px}
+.lb-meta{padding:12px 14px;background:#0f172a}
+.lb-meta-row{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-bottom:4px}
+.lb-meta-row strong{color:#e2e8f0}
+.lb-close{position:absolute;top:12px;right:14px;background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>LEARN Ukraine — Programme MIS Dashboard &nbsp;|&nbsp; P504171</h1>
+    <p>Lifting Education Access and Resilience in times of Need · PforR + IPF · Effective Sep 2024 · Closing Sep 2027</p>
+  </div>
+  <div class="hdr-right">
+    <span class="bdg b-sat">PDO: Satisfactory</span>
+    <span class="bdg b-sat">IP: Satisfactory</span>
+    <span class="bdg b-sub">Risk: Substantial</span>
+    <span class="bdg b-blue">8 / 12 DLRs achieved</span>
+    <span class="bdg b-grey">ISR Feb 2025</span>
+  </div>
+</div>
+
+<!-- VIEW + REGION BAR -->
+<div class="view-bar">
+  <div class="view-label">Oblast / Region:</div>
+  <select class="region-sel" id="region-sel" onchange="updateRegion()">
+    <option value="all">All oblasts (national)</option>
+    <option value="Kharkiv">Kharkiv</option>
+    <option value="Kherson">Kherson (GCA)</option>
+    <option value="Zaporizhzhia">Zaporizhzhia (GCA)</option>
+    <option value="Mykolaiv">Mykolaiv</option>
+    <option value="Sumy">Sumy</option>
+    <option value="Donetsk">Donetsk (GCA)</option>
+    <option value="Dnipropetrovsk">Dnipropetrovsk</option>
+    <option value="Kyiv City">Kyiv City</option>
+    <option value="Poltava">Poltava</option>
+    <option value="Lviv">Lviv</option>
+    <option value="Odessa">Odessa</option>
+  </select>
+  <div class="isr-bar">
+    <div class="isr-chip"><div class="isr-dot" style="background:#16a34a"></div>PDO: Satisfactory</div>
+    <div class="isr-chip"><div class="isr-dot" style="background:#16a34a"></div>M&amp;E: Satisfactory</div>
+    <div class="isr-chip"><div class="isr-dot" style="background:#d97706"></div>Risk: Substantial</div>
+    <div class="isr-chip"><div class="isr-dot" style="background:#16a34a"></div>Fiduciary: Satisfactory</div>
+  </div>
+</div>
+<!-- TABS -->
+<div class="nav">
+  <div class="ntab on" data-tab="overview">Programme overview</div>
+  <div class="ntab" data-tab="dli">DLI tracker</div>
+  <div class="ntab" data-tab="shelters">Shelters (DLI 2)</div>
+  <div class="ntab" data-tab="transport">School transport (DLI 4)</div>
+  <div class="ntab" data-tab="teachers">Teacher training (DLI 5)</div>
+  <div class="ntab" data-tab="tlm">Teaching materials (DLI 6)</div>
+  <div class="ntab" data-tab="datacollection">Data collection pipeline</div>
+</div>
+
+<div class="body">
+
+<!-- ═══════════════ OVERVIEW ═══════════════ -->
+<div class="pg on" id="pg-overview">
+  <div class="sec" id="ov-sec-title">Programme overview — all oblasts · National totals</div>
+  <div class="disb-summary">
+    <div class="ds-card"><div class="ds-val">$992M</div><div class="ds-lbl">Total programme financing</div><div class="ds-sub">IBRD $235M · IDA $155M · Grant $30M · Counterpart $572M</div></div>
+    <div class="ds-card"><div class="ds-val" id="ov-disbursed">$202.8M</div><div class="ds-lbl">Total disbursed to date</div><div class="ds-sub" id="ov-disb-pct">49% of IBRD+IDA+Grant net financing</div></div>
+    <div class="ds-card"><div class="ds-val">8 / 12</div><div class="ds-lbl">DLRs fully achieved</div><div class="ds-sub">4 DLRs in progress · Closing Sep 2027</div></div>
+    <div class="ds-card"><div class="ds-val" id="ov-students">906,000</div><div class="ds-lbl">Students supported (target)</div><div class="ds-sub" id="ov-students-sub">Current: 603,000 across all DLIs</div></div>
+  </div>
+  <div class="sec">PDO indicator status</div>
+  <div class="kg">
+    <div class="kc kb"><div class="kl">Students supported with better education</div><div class="kv" id="ov-pdo1">603,000</div><div class="ks">Target: 906,000 by Sep 2027</div><div class="kbar"><div class="kf" id="ov-pdo1-bar" style="width:66%;background:#0052A5"></div></div><div class="kpr"><span>0 baseline</span><span id="ov-pdo1-pct">66% to target</span></div></div>
+    <div class="kc kg2"><div class="kl">Female students supported</div><div class="kv" id="ov-pdo2">301,500</div><div class="ks">Target: 453,000 (50% parity)</div><div class="kbar"><div class="kf" id="ov-pdo2-bar" style="width:67%;background:#16a34a"></div></div><div class="kpr"><span>0 baseline</span><span>50% gender parity maintained</span></div></div>
+    <div class="kc ka"><div class="kl">Teachers delivering NUS curriculum</div><div class="kv" id="ov-pdo3">135,059</div><div class="ks">Target: 120,000 (exceeded for G7)</div><div class="kbar"><div class="kf" id="ov-pdo3-bar" style="width:100%;background:#16a34a"></div></div><div class="kpr"><span>G7: exceeded ✓</span><span>G8: in progress</span></div></div>
+    <div class="kc kp"><div class="kl">Improved use of data for system management</div><div class="kv" id="ov-pdo4">In progress</div><div class="ks">AIKOM + NUS pilot data targeted for 2026</div><div class="kbar"><div class="kf" id="ov-pdo4-bar" style="width:40%;background:#7c3aed"></div></div><div class="kpr"><span>Administrative data stage</span><span>NUS pilot results 2026</span></div></div>
+  </div>
+  <div class="g2e">
+    <div class="cc"><div class="ct">DLR achievement status — all 12 DLRs</div><div style="position:relative;height:170px"><canvas id="c-dli-status" role="img" aria-label="DLR status donut">DLR status.</canvas></div></div>
+    <div class="cc"><div class="ct">Disbursement trajectory (US$M)</div><div style="position:relative;height:170px"><canvas id="c-disb-trend" role="img" aria-label="Disbursement trend">Disbursement.</canvas></div></div>
+  </div>
+  <div class="cc">
+    <div class="ct">Implementation map — key indicators by oblast</div>
+    <svg class="map-svg" id="map-overview" viewBox="0 0 780 280" style="height:240px"></svg>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:7px">
+      <div class="isr-chip"><div class="isr-dot" style="background:#16a34a"></div>On track / exceeded</div>
+      <div class="isr-chip"><div class="isr-dot" style="background:#d97706"></div>In progress</div>
+      <div class="isr-chip"><div class="isr-dot" style="background:#dc2626"></div>Behind target</div>
+      <div class="isr-chip"><div class="isr-dot" style="background:#94a3b8"></div>Limited access / conflict-affected</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DLI TRACKER ═══════════════ -->
+<div class="pg" id="pg-dli">
+  <div class="sec">Disbursement-Linked Indicators — achievement and allocation status</div>
+  <div class="mgmt-bar">
+    <div class="mb-label">Show:</div>
+    <div class="mb-tog">
+      <button class="mbt on" onclick="setDliView('all',this)">All DLIs</button>
+      <button class="mbt" onclick="setDliView('achieved',this)">Achieved / Exceeded</button>
+      <button class="mbt" onclick="setDliView('progress',this)">In progress</button>
+    </div>
+    <div class="mb-ins mi-g" id="dli-insight">&#10003; $200.6M disbursed · 8 of 12 DLRs fully achieved</div>
+  </div>
+  <div class="dli-grid" id="dli-cards"></div>
+  <div class="cc">
+    <div class="ct">DLI allocation vs disbursed (US$M)</div>
+    <div style="position:relative;height:200px"><canvas id="c-dli-bar" role="img" aria-label="DLI allocation bar">DLI allocation.</canvas></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SHELTERS ═══════════════ -->
+<div class="pg" id="pg-shelters">
+  <div class="mgmt-bar">
+    <div class="mb-label">DLI 2: Shelters · $65M · Scalable</div>
+    <div class="mb-tog">
+      <button class="mbt on" onclick="setShelterView('progress',this)">Construction progress</button>
+      <button class="mbt" onclick="setShelterView('action',this)">Oblasts requiring attention</button>
+    </div>
+    <div class="mb-ins mi-w" id="shelter-insight">&#9888; 13,500 beneficiaries still to be reached · Kherson and Donetsk lagging</div>
+  </div>
+  <div class="kg">
+    <div class="kc kb"><div class="kl">Schools with shelters constructed / rehabilitated</div><div class="kv" id="sh-schools">142</div><div class="ks" id="sh-schools-s">Across 11 high-priority oblasts</div><div class="kbar"><div class="kf" id="sh-bar1" style="width:58%;background:#0052A5"></div></div><div class="kpr"><span>Target: 32,000 beneficiaries</span><span id="sh-pct1">58% of target</span></div></div>
+    <div class="kc kg2"><div class="kl">Students & teachers with shelter access</div><div class="kv" id="sh-ben">18,500</div><div class="ks">Target: 32,000 · DLR 2.1 scalable</div><div class="kbar"><div class="kf" id="sh-bar2" style="width:58%;background:#16a34a"></div></div><div class="kpr"><span>0 baseline</span><span id="sh-pct2">58% of target</span></div></div>
+    <div class="kc ka"><div class="kl">Oblasts with active construction</div><div class="kv" id="sh-oblasts">9 / 11</div><div class="ks" id="sh-oblasts-s">Kherson and Donetsk most constrained</div><div class="kbar"><div class="kf" id="sh-bar3" style="width:82%;background:#d97706"></div></div></div>
+    <div class="kc kt"><div class="kl">Using DREAM system for project processing</div><div class="kv" id="sh-dream">Yes</div><div class="ks">Required under DLR 1.1 criteria · subvention condition</div><div class="kbar"><div class="kf" style="width:100%;background:#0891b2"></div></div></div>
+  </div>
+  
+  <div class="ct" style="margin-bottom:10px">Field photo evidence — shelter inspections</div>
+  <div class="photo-grid" id="shelter-photos"></div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+    <div class="lb-inner">
+      <div class="lb-photo" id="lb-photo">
+        <button class="lb-close" onclick="document.getElementById('lightbox').classList.remove('open')">&#10005;</button>
+      </div>
+      <div class="lb-gps-strip">
+        <div class="lb-gps-row"><label style="color:#64748b;font-size:9px;min-width:80px">Latitude</label><span id="lb-lat">49.9923° N</span></div>
+        <div class="lb-gps-row"><label style="color:#64748b;font-size:9px;min-width:80px">Longitude</label><span id="lb-lon">36.2311° E</span></div>
+        <div class="lb-gps-row"><label style="color:#64748b;font-size:9px;min-width:80px">Accuracy</label><span id="lb-acc" style="color:#facc15">3.8 m</span></div>
+        <div class="lb-gps-row"><label style="color:#64748b;font-size:9px;min-width:80px">Altitude</label><span id="lb-alt" style="color:#a78bfa">142 m ASL</span></div>
+      </div>
+      <div class="lb-meta">
+        <div class="lb-meta-row"><span>Photo ID</span><strong id="lb-id">IMG_0314_shelter1.jpg</strong></div>
+        <div class="lb-meta-row"><span>Captured</span><strong id="lb-time">14 Mar 2026 · 10:24:38 AM UTC+3</strong></div>
+        <div class="lb-meta-row"><span>Officer</span><strong id="lb-officer">O. Kovalenko · Kharkiv Oblast Education Dept</strong></div>
+        <div class="lb-meta-row"><span>School (AIKOM)</span><strong id="lb-school">UA-KH-0847 · Kharkiv Secondary School No. 47</strong></div>
+        <div class="lb-meta-row"><span>Checklist item</span><strong id="lb-item">C1 — Structural reinforcement complete</strong></div>
+        <div class="lb-meta-row"><span>Submission ID</span><strong id="lb-sub">SUB-SHLTR-20260314-KH047</strong></div>
+        <div style="margin-top:8px;padding:6px 10px;background:#166534;border-radius:6px;font-size:10px;color:#bbf7d0;font-weight:600;text-align:center">&#9989; GEMS VERIFIED — GPS + timestamp + submission ID match confirmed</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="cc">
+      <div class="ct">Shelter beneficiaries by oblast</div>
+      <div style="position:relative;height:270px"><canvas id="c-shelter-bar" role="img" aria-label="Shelter progress by oblast">Shelters.</canvas></div>
+    </div>
+    <div>
+      <div class="cc" style="margin-bottom:10px">
+        <div class="ct">Oblast status — shelter construction</div>
+        <div style="overflow:auto;max-height:200px">
+          <table class="rtbl" id="tbl-shelters"></table>
+        </div>
+      </div>
+      <div id="shelter-action" style="display:none">
+        <div class="cc">
+          <div class="ct" style="color:#991b1b">&#9888; Oblasts requiring follow-up</div>
+          <div id="shelter-action-rows"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TRANSPORT ═══════════════ -->
+<div class="pg" id="pg-transport">
+  <div class="mgmt-bar">
+    <div class="mb-label">DLI 3 & 4: School transport · $60M combined</div>
+    <div class="mb-tog">
+      <button class="mbt on" onclick="setTransportView('students',this)">Student access</button>
+      <button class="mbt" onclick="setTransportView('disability',this)">Disability inclusion</button>
+    </div>
+    <div class="mb-ins mi-g" id="transport-insight">&#10003; DLR 4.1 exceeded — 18,112 students (target: 14,000)</div>
+  </div>
+  <div class="kg">
+    <div class="kc kg2"><div class="kl">Students with access to free bus transportation</div><div class="kv" id="tr-students">18,112</div><div class="ks">Target: 14,000 · DLR 4.1 exceeded ✓</div><div class="kbar"><div class="kf" style="width:100%;background:#16a34a"></div></div><div class="kpr"><span>Exceeded by 4,112 students</span><span>129% of target</span></div></div>
+    <div class="kc kb"><div class="kl">Students with disabilities on free transport</div><div class="kv" id="tr-disability">118</div><div class="ks">Target: 234 · On track</div><div class="kbar"><div class="kf" id="tr-dis-bar" style="width:50%;background:#0052A5"></div></div><div class="kpr"><span>50% of target</span><span>Phase 2 scaling 2025</span></div></div>
+    <div class="kc ka"><div class="kl">Accessible buses (disability-designed)</div><div class="kv" id="tr-buses">1,800+</div><div class="ks">Over 25,000 buses destroyed — still needed</div><div class="kbar"><div class="kf" style="width:7%;background:#d97706"></div></div><div class="kpr"><span>Critical gap in rural oblasts</span></div></div>
+    <div class="kc kt"><div class="kl">Bus subvention disbursed to communities</div><div class="kv" id="tr-disb">70%</div><div class="ks">Target: 70% by State Treasury · DLR 3.1 ✓</div><div class="kbar"><div class="kf" style="width:100%;background:#0891b2"></div></div></div>
+  </div>
+  <div class="g2e">
+    <div class="cc"><div class="ct">Students with free bus access by oblast</div><div style="position:relative;height:220px"><canvas id="c-transport-bar" role="img" aria-label="Transport by oblast">Transport.</canvas></div></div>
+    <div class="cc"><div class="ct" id="transport-chart2-title">Student vs target breakdown</div><div style="position:relative;height:220px"><canvas id="c-transport2" role="img" aria-label="Transport detail">Transport detail.</canvas></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ TEACHERS ═══════════════ -->
+<div class="pg" id="pg-teachers">
+  <div class="mgmt-bar">
+    <div class="mb-label">DLI 5: Teacher training · $60M · NUS reform</div>
+    <div class="mb-tog">
+      <button class="mbt on" onclick="setTeacherView('grade',this)">By grade</button>
+      <button class="mbt" onclick="setTeacherView('oblast',this)">By oblast</button>
+      <button class="mbt" onclick="setTeacherView('gender',this)">Gender breakdown</button>
+    </div>
+    <div class="mb-ins mi-g" id="teacher-insight">&#10003; G7 training exceeded — 135,059 trained (target: 60,000)</div>
+  </div>
+  <div class="kg">
+    <div class="kc kg2"><div class="kl">Teachers trained — Grade 7 NUS curriculum</div><div class="kv">135,059</div><div class="ks">Target: 60,000 · DLR 5.2 exceeded ✓</div><div class="kbar"><div class="kf" style="width:100%;background:#16a34a"></div></div><div class="kpr"><span>Exceeded by 75,059 teachers</span><span>225% of target</span></div></div>
+    <div class="kc ka"><div class="kl">Teachers trained — Grade 8 NUS curriculum</div><div class="kv" id="tch-g8">28,400</div><div class="ks">Target: 60,000 · DLR 5.3 in progress</div><div class="kbar"><div class="kf" id="tch-g8-bar" style="width:47%;background:#d97706"></div></div><div class="kpr"><span id="tch-g8-pct">47% of target</span><span>Dec 2025 deadline</span></div></div>
+    <div class="kc kb"><div class="kl">NUS pilot schools (Grades 8–9)</div><div class="kv" id="tch-pilot">100</div><div class="ks">Grade 8 pilot active · Grade 9 planned</div><div class="kbar"><div class="kf" id="tch-pilot-bar" style="width:100%;background:#0052A5"></div></div><div class="kpr"><span>Target: 100 schools ✓</span><span>Pilot results → 2026 scale-up</span></div></div>
+    <div class="kc kp"><div class="kl">Teachers from pilot schools — improved practice</div><div class="kv" id="tch-improved">68</div><div class="ks">Target: 100 (G9) · 300 (completion)</div><div class="kbar"><div class="kf" id="tch-imp-bar" style="width:68%;background:#7c3aed"></div></div><div class="kpr"><span>68% of interim target</span></div></div>
+  </div>
+  <div class="g2e">
+    <div class="cc"><div class="ct" id="teacher-chart1-title">Teachers trained by grade — progress vs target</div><div style="position:relative;height:200px"><canvas id="c-teacher1" role="img" aria-label="Teacher training">Training.</canvas></div></div>
+    <div class="cc"><div class="ct" id="teacher-chart2-title">Grade 8 training progress by oblast</div><div style="position:relative;height:200px"><canvas id="c-teacher2" role="img" aria-label="Training by oblast">Oblast training.</canvas></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ TLM ═══════════════ -->
+<div class="pg" id="pg-tlm">
+  <div class="mgmt-bar">
+    <div class="mb-label">DLI 6: Teaching & learning materials · $94.9M · NUS-aligned</div>
+    <div class="mb-tog">
+      <button class="mbt on" onclick="setTlmView('grade',this)">By grade</button>
+      <button class="mbt" onclick="setTlmView('oblast',this)">By oblast</button>
+      <button class="mbt" onclick="setTlmView('inclusion',this)">Inclusion (gender & disability)</button>
+    </div>
+    <div class="mb-ins mi-g" id="tlm-insight">&#10003; G7 exceeded — 397,570 students (target 300,000)</div>
+  </div>
+  <div class="kg">
+    <div class="kc kg2"><div class="kl">G7 students with free NUS textbooks</div><div class="kv" id="tlm-g7">397,570</div><div class="ks">Target: 300,000 · DLR 6.2 exceeded ✓</div><div class="kbar"><div class="kf" style="width:100%;background:#16a34a"></div></div><div class="kpr"><span>Exceeded by 97,570 students</span><span>IVA verified March 2025</span></div></div>
+    <div class="kc ka"><div class="kl">G8 students with free NUS textbooks</div><div class="kv" id="tlm-g8">142,000</div><div class="ks">Target: 337,000 (AF) · DLR 6.3 in progress</div><div class="kbar"><div class="kf" id="tlm-g8-bar" style="width:42%;background:#d97706"></div></div><div class="kpr"><span id="tlm-g8-pct">42% of target</span><span>Dec 2025 deadline</span></div></div>
+    <div class="kc kb"><div class="kl">Students with disabilities receiving textbooks</div><div class="kv" id="tlm-dis">8,764</div><div class="ks">G7: 5,000 target met · G8: in progress</div><div class="kbar"><div class="kf" id="tlm-dis-bar" style="width:88%;background:#0052A5"></div></div><div class="kpr"><span>88% of disability inclusion target</span></div></div>
+    <div class="kc kp"><div class="kl">Textbook copies with gender non-discrimination review</div><div class="kv" id="tlm-gender">1,334,797</div><div class="ks">Target: 2,000,000 · G7–G8 maths & Ukrainian</div><div class="kbar"><div class="kf" id="tlm-gen-bar" style="width:67%;background:#7c3aed"></div></div><div class="kpr"><span>67% of 2M target</span></div></div>
+  </div>
+  <div class="g2e">
+    <div class="cc"><div class="ct" id="tlm-chart1-title">Textbook distribution — G7 vs G8 progress</div><div style="position:relative;height:200px"><canvas id="c-tlm1" role="img" aria-label="TLM grades">TLM grades.</canvas></div></div>
+    <div class="cc"><div class="ct" id="tlm-chart2-title">G8 textbook receipt by oblast</div><div style="position:relative;height:200px"><canvas id="c-tlm2" role="img" aria-label="TLM oblasts">TLM oblasts.</canvas></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ DATA COLLECTION PIPELINE ═══════════════ -->
+<div class="pg" id="pg-datacollection">
+  <div class="sec">How field data is collected and feeds this dashboard</div>
+  <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:11px;color:#78350f">
+    <strong style="display:block;font-size:12px;font-weight:700;margin-bottom:3px">The gap this system fills</strong>
+    The Independent Verification Agency (IVA) confirms DLR achievement periodically for disbursement — but does not tell MoES which schools still have no shelter, which oblasts are behind on G8 teacher training, or which schools have not confirmed textbook receipt. This KoboToolbox + Power BI pipeline provides real-time operational visibility between IVA verification cycles, at school and oblast level.
+  </div>
+  <div class="arrow-flow">
+    <div class="af-step"><strong>&#127979; School / site</strong>Field officer submits GEMS form on mobile</div>
+    <div class="af-arr">&#8594;</div>
+    <div class="af-step"><strong>&#9729; KoboToolbox / GEMS</strong>GPS-stamped, photo evidence, offline sync</div>
+    <div class="af-arr">&#8594;</div>
+    <div class="af-step"><strong>&#128202; Power BI</strong>Scheduled refresh · oblast aggregation</div>
+    <div class="af-arr">&#8594;</div>
+    <div class="af-step"><strong>&#128203; MoES / WBG</strong>DLI tracker · early warning · IVA preparation</div>
+  </div>
+  <div style="font-size:12px;font-weight:700;color:#003366;margin-bottom:10px">Sample field forms — submitted from school site</div>
+  <div style="display:flex;gap:8px;margin-bottom:12px" id="form-sel">
+    <button class="mbt on" onclick="showForm('shelter',this)" style="border:1.5px solid #e2e8f0;border-radius:6px;padding:5px 12px;font-family:inherit">Shelter verification form</button>
+    <button class="mbt" onclick="showForm('teacher',this)" style="border:1.5px solid #e2e8f0;border-radius:6px;padding:5px 12px;font-family:inherit">Teacher training form</button>
+    <button class="mbt" onclick="showForm('textbook',this)" style="border:1.5px solid #e2e8f0;border-radius:6px;padding:5px 12px;font-family:inherit">Textbook receipt form</button>
+  </div>
+
+  <!-- SHELTER FORM -->
+  <div id="form-shelter" class="kobo-form" style="display:block">
+    <div class="kf-top" style="background:#003366"><span>LEARN Ukraine — Shelter Verification Form · GEMS</span><small>KoboToolbox · kf.kobotoolbox.org</small></div>
+    <div class="kf-meta" style="background:#eff6ff;border-bottom:1px solid #bfdbfe">
+      <div class="mc"><span>Submitted by</span><strong>O. Kovalenko, Kharkiv Oblast Education Dept</strong></div>
+      <div class="mc"><span>Date & time</span><strong>14 Mar 2026 · 10:22 AM</strong></div>
+      <div class="mc"><span>Submission ID</span><strong>SUB-SHLTR-20260314-KH047</strong></div>
+    </div>
+    <div class="kf-sec">
+      <h4>A. School identification & GPS</h4>
+      <div class="fg">
+        <div class="f"><label>AIKOM school code</label><value>UA-KH-0847</value></div>
+        <div class="f"><label>School name</label><value>Kharkiv Secondary School No. 47</value></div>
+        <div class="f"><label>Oblast</label><value>Kharkiv</value></div>
+        <div class="f"><label>Hromada</label><value>Kharkiv City Hromada</value></div>
+      </div>
+      <div class="gps-row">
+        <div style="font-size:18px">&#128205;</div>
+        <div><div style="font-weight:700;color:#0c4a6e;font-size:11px">GPS captured at shelter entrance — auto by GEMS</div>
+        <div style="color:#0369a1">Lat: 49.9923 · Lon: 36.2311 · Accuracy: 3.8m</div>
+        <div style="font-size:9px;color:#64748b;margin-top:2px">Cannot be manually edited · timestamp-locked · proves officer was on site</div></div>
+      </div>
+    </div>
+    <div class="kf-sec">
+      <h4>B. Shelter construction status</h4>
+      <div class="fg">
+        <div class="f"><label>Construction status</label><value style="color:#166534">Works completed — verified</value></div>
+        <div class="f"><label>Subvention amount (UAH)</label><value>UAH 1,840,000</value></div>
+        <div class="f"><label>Shelter type</label><value>Reinforced basement conversion</value></div>
+        <div class="f"><label>DREAM system project ID</label><value>DREAM-2025-KH-0847</value></div>
+      </div>
+    </div>
+    <div class="kf-sec">
+      <h4>C. Beneficiary count (verified on site)</h4>
+      <div class="fg">
+        <div class="f"><label>Total students in shelter capacity</label><value>320 students</value></div>
+        <div class="f"><label>Teachers covered</label><value>28 teachers</value></div>
+        <div class="f"><label>Students with disabilities</label><value>14 students</value></div>
+        <div class="f"><label>Shelter accessible for disability?</label><value style="color:#166534">Yes — ramp + wide door</value></div>
+      </div>
+    </div>
+    <div class="kf-sec">
+      <h4>D. Construction checklist — verified by observation</h4>
+      <div class="chk">
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Structural reinforcement complete</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Emergency lighting installed</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Ventilation system functional</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Water supply / sanitation in place</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Disability access — ramp and door width</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Evacuation route marked and clear</div>
+      </div>
+    </div>
+    <div class="kf-sec">
+      <h4>E. Photo evidence — GPS-tagged, uploaded from site</h4>
+      <div class="pstrip">
+        <div class="pbox"><div class="pico">&#127979;</div><div>Shelter interior</div><div style="font-size:8px">IMG_0314_shelter1.jpg</div></div>
+        <div class="pbox"><div class="pico">&#9889;</div><div>Emergency lighting</div><div style="font-size:8px">IMG_0314_shelter2.jpg</div></div>
+        <div class="pbox"><div class="pico">&#128688;</div><div>Disability access</div><div style="font-size:8px">IMG_0314_shelter3.jpg</div></div>
+      </div>
+      <div style="font-size:9px;color:#94a3b8;margin-top:5px">All photos GPS-tagged and timestamped · cannot be pre-taken · stored in GEMS archive</div>
+    </div>
+    <div class="kf-foot"><span>Online submission via GEMS · synced immediately · 14 Mar 2026 10:22 UTC+3</span><span class="sbadge" style="background:#16a34a;color:#fff">Submitted ✓</span></div>
+  </div>
+
+  <!-- TEACHER FORM -->
+  <div id="form-teacher" class="kobo-form" style="display:none">
+    <div class="kf-top" style="background:#166534"><span>LEARN Ukraine — Teacher Training Monitoring Form · GEMS</span><small>KoboToolbox · kf.kobotoolbox.org</small></div>
+    <div class="kf-meta" style="background:#f0fdf4;border-bottom:1px solid #dcfce7">
+      <div class="mc"><span>Submitted by</span><strong>I. Savchenko, Dnipropetrovsk Oblast</strong></div>
+      <div class="mc"><span>Date & time</span><strong>22 Feb 2026 · 16:45 PM</strong></div>
+      <div class="mc"><span>Submission ID</span><strong>SUB-TRAIN-20260222-DN112</strong></div>
+    </div>
+    <div class="kf-sec">
+      <h4>A. Training session identification</h4>
+      <div class="fg">
+        <div class="f"><label>Oblast</label><value>Dnipropetrovsk</value></div>
+        <div class="f"><label>Hromada</label><value>Dnipro City Hromada</value></div>
+        <div class="f"><label>Training type</label><value>NUS Grade 8 — competency-based curriculum</value></div>
+        <div class="f"><label>Session date</label><value>22 Feb 2026</value></div>
+      </div>
+      <div class="gps-row">
+        <div style="font-size:18px">&#128205;</div>
+        <div><div style="font-weight:700;color:#0c4a6e;font-size:11px">GPS — training venue</div>
+        <div style="color:#0369a1">Lat: 48.4647 · Lon: 35.0462 · Accuracy: 5.1m</div></div>
+      </div>
+    </div>
+    <div class="kf-sec">
+      <h4>B. Attendance record</h4>
+      <div class="fg">
+        <div class="f"><label>Total teachers who completed training</label><value style="color:#166534">34 teachers</value></div>
+        <div class="f"><label>Female teachers</label><value>26 (76%)</value></div>
+        <div class="f"><label>Grade trained for</label><value>Grade 8 — NUS curriculum</value></div>
+        <div class="f"><label>Training provider</label><value>NUS Implementing Office (NIO)</value></div>
+      </div>
+    </div>
+    <div class="kf-sec">
+      <h4>C. Training content & materials</h4>
+      <div class="chk">
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Competency-based curriculum delivered</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Environmental literacy module included</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Gender non-discrimination training included</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>NUS-aligned textbook orientation provided</div>
+      </div>
+    </div>
+    <div class="kf-sec">
+      <h4>D. Photo evidence — training venue GPS-stamped</h4>
+      <div class="pstrip">
+        <div class="pbox" style="background:#1a3a2f">
+          <div class="pico">&#128104;&#8205;&#127979;</div>
+          <div style="color:#4ade80;font-size:8px;font-family:monospace">49.4647°N 35.0462°E</div>
+          <div>Session in progress</div>
+        </div>
+        <div class="pbox" style="background:#1e3a5f">
+          <div class="pico">&#128203;</div>
+          <div style="color:#4ade80;font-size:8px;font-family:monospace">49.4650°N 35.0458°E</div>
+          <div>Attendance sheet</div>
+        </div>
+        <div class="pbox" style="background:#3b1f5f">
+          <div class="pico">&#128247;</div>
+          <div style="color:#4ade80;font-size:8px;font-family:monospace">49.4645°N 35.0464°E</div>
+          <div>Training materials</div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:#94a3b8;margin-top:5px">GPS auto-captured at training venue · timestamp locked · cannot be submitted remotely</div>
+    </div>
+    <div class="kf-sec">
+      <h4>E. Teacher satisfaction (continuous feedback)</h4>
+      <div class="fg">
+        <div class="f"><label>Training met professional needs</label><value style="color:#166534">88% agreed or strongly agreed</value></div>
+        <div class="f"><label>Would recommend to colleagues</label><value style="color:#166534">91%</value></div>
+        <div class="f"><label>Content relevant to Grade 8 curriculum</label><value style="color:#166534">94%</value></div>
+        <div class="f"><label>Overall satisfaction score</label><value style="color:#166534">4.4 / 5.0</value></div>
+      </div>
+    </div>
+    <div class="kf-foot"><span>Online submission via GEMS · synced immediately · 22 Feb 2026 16:45 UTC+3</span><span class="sbadge" style="background:#16a34a;color:#fff">Submitted ✓</span></div>
+  </div>
+
+  <!-- TEXTBOOK FORM -->
+  <div id="form-textbook" class="kobo-form" style="display:none">
+    <div class="kf-top" style="background:#854d0e"><span>LEARN Ukraine — Textbook Receipt Confirmation Form · GEMS</span><small>KoboToolbox · kf.kobotoolbox.org</small></div>
+    <div class="kf-meta" style="background:#fffbeb;border-bottom:1px solid #fde68a">
+      <div class="mc"><span>Submitted by</span><strong>V. Petrenko, School Principal</strong></div>
+      <div class="mc"><span>Date & time</span><strong>08 Sep 2025 · 09:15 AM</strong></div>
+      <div class="mc"><span>Submission ID</span><strong>SUB-TLM-20250908-LV023</strong></div>
+    </div>
+    <div class="kf-sec">
+      <h4>A. School identification</h4>
+      <div class="fg">
+        <div class="f"><label>AIKOM school code</label><value>UA-LV-0234</value></div>
+        <div class="f"><label>School name</label><value>Lviv Gymnasium No. 23</value></div>
+        <div class="f"><label>Oblast</label><value>Lviv</value></div>
+        <div class="f"><label>Grade receiving textbooks</label><value>Grade 8</value></div>
+      </div>
+    </div>
+    <div class="kf-sec">
+      <h4>B. Delivery confirmation</h4>
+      <div class="fg">
+        <div class="f"><label>Total G8 students enrolled</label><value>187 students</value></div>
+        <div class="f"><label>Textbooks received (sets)</label><value style="color:#166534">187 sets ✓ — all students</value></div>
+        <div class="f"><label>Textbooks for students with disabilities</label><value style="color:#166534">12 large-print sets received</value></div>
+        <div class="f"><label>Gender non-discrimination reviewed?</label><value style="color:#166534">Yes — confirmed on cover label</value></div>
+      </div>
+    </div>
+    <div class="kf-sec">
+      <h4>C. Subject sets received</h4>
+      <div class="chk">
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Mathematics — Grade 8 NUS-aligned ✓</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Ukrainian Language — Grade 8 NUS-aligned ✓</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>History of Ukraine — Grade 8 ✓</div>
+        <div class="ci cy"><div class="cico" style="background:#16a34a;color:#fff">&#10003;</div>Natural Sciences — Grade 8 ✓</div>
+      </div>
+    </div>
+    <div class="kf-sec">
+      <h4>D. Principal signature & confirmation</h4>
+      <div class="fg">
+        <div class="f"><label>Principal name</label><value>V. Petrenko</value></div>
+        <div class="f"><label>Date of receipt</label><value>08 Sep 2025</value></div>
+        <div class="f"><label>All sets in good condition?</label><value style="color:#166534">Yes — no damage reported</value></div>
+        <div class="f"><label>Digital signature captured</label><value style="color:#166534">Signed on device ✓</value></div>
+      </div>
+    </div>
+    <div class="kf-foot"><span>Online submission via GEMS · synced immediately · 08 Sep 2025 09:15 UTC+3</span><span class="sbadge" style="background:#16a34a;color:#fff">Submitted ✓</span></div>
+  </div>
+</div>
+
+</div><!-- body -->
+</div><!-- wrap -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════
+const OBLASTS = ['Kharkiv','Dnipropetrovsk','Kyiv City','Zaporizhzhia','Mykolaiv','Sumy','Donetsk (GCA)','Poltava','Odessa','Lviv','Kherson'];
+const OB_SHORT = ['Kharkiv','Dnipro','Kyiv','Zaporizhzhia','Mykolaiv','Sumy','Donetsk','Poltava','Odessa','Lviv','Kherson'];
+
+const REGION_DATA = {
+  all:{
+    shelter:{schools:142,ben:18500,target:32000,pct:58},
+    transport:{students:18112,target:14000,disability:118,dis_target:234},
+    teacher:{g7:135059,g7t:60000,g8:28400,g8t:60000},
+    tlm:{g7:397570,g7t:300000,g8:142000,g8t:337000,dis:8764,gender:1334797}
+  },
+  Kharkiv:{shelter:{schools:28,ben:4200,target:7000,pct:60},transport:{students:3800,target:3000,disability:22,dis_target:40},teacher:{g7:24000,g7t:10000,g8:5200,g8t:10000},tlm:{g7:68000,g7t:52000,g8:24000,g8t:58000,dis:1400,gender:220000}},
+  Dnipropetrovsk:{shelter:{schools:22,ben:2900,target:5000,pct:58},transport:{students:2800,target:2200,disability:18,dis_target:30},teacher:{g7:18000,g7t:8000,g8:4100,g8t:8000},tlm:{g7:52000,g7t:40000,g8:19000,g8t:44000,dis:1100,gender:180000}},
+  "Kyiv City":{shelter:{schools:18,ben:2800,target:4000,pct:70},transport:{students:2200,target:1800,disability:14,dis_target:22},teacher:{g7:22000,g7t:9000,g8:5800,g8t:9000},tlm:{g7:48000,g7t:38000,g8:22000,g8t:42000,dis:980,gender:160000}},
+  Zaporizhzhia:{shelter:{schools:19,ben:2100,target:4500,pct:47},transport:{students:1800,target:1500,disability:12,dis_target:20},teacher:{g7:14000,g7t:6000,g8:3200,g8t:6000},tlm:{g7:38000,g7t:28000,g8:12000,g8t:31000,dis:820,gender:120000}},
+  Mykolaiv:{shelter:{schools:12,ben:1200,target:2500,pct:48},transport:{students:1200,target:900,disability:8,dis_target:12},teacher:{g7:9000,g7t:4000,g8:2100,g8t:4000},tlm:{g7:24000,g7t:18000,g8:8000,g8t:20000,dis:520,gender:78000}},
+  Sumy:{shelter:{schools:15,ben:1650,target:3000,pct:55},transport:{students:1400,target:1100,disability:10,dis_target:16},teacher:{g7:11000,g7t:5000,g8:2400,g8t:5000},tlm:{g7:28000,g7t:22000,g8:9800,g8t:24000,dis:620,gender:92000}},
+  "Donetsk (GCA)":{shelter:{schools:10,ben:980,target:2500,pct:39},transport:{students:820,target:700,disability:6,dis_target:10},teacher:{g7:7000,g7t:3500,g8:1400,g8t:3500},tlm:{g7:18000,g7t:14000,g8:5200,g8t:15000,dis:380,gender:58000}},
+  Poltava:{shelter:{schools:6,ben:620,target:1000,pct:62},transport:{students:680,target:500,disability:4,dis_target:8},teacher:{g7:5800,g7t:2800,g8:1200,g8t:2800},tlm:{g7:14000,g7t:11000,g8:4200,g8t:12000,dis:290,gender:44000}},
+  Odessa:{shelter:{schools:8,ben:840,target:1500,pct:56},transport:{students:1100,target:900,disability:8,dis_target:14},teacher:{g7:8000,g7t:4000,g8:1900,g8t:4000},tlm:{g7:21000,g7t:16000,g8:7400,g8t:18000,dis:440,gender:68000}},
+  Lviv:{shelter:{schools:4,ben:200,target:500,pct:40},transport:{students:320,target:200,disability:2,dis_target:4},teacher:{g7:4200,g7t:2000,g8:900,g8t:2000},tlm:{g7:10000,g7t:8000,g8:3600,g8t:9000,dis:180,gender:32000}},
+  Kherson:{shelter:{schools:8,ben:850,target:3000,pct:28},transport:{students:580,target:500,disability:4,dis_target:8},teacher:{g7:6200,g7t:3200,g8:1200,g8t:3200},tlm:{g7:15000,g7t:12000,g8:4600,g8t:13000,dis:320,gender:50000}},
+};
+
+let curRegion='all';
+const ci={};
+function mkC(id,cfg){if(ci[id])ci[id].destroy();const el=document.getElementById(id);if(el)ci[id]=new Chart(el,cfg);}
+const g={color:'#f1f5f9'},xt={font:{size:9}},yt={font:{size:9}};
+
+// ─── MAP ────────────────────────────────────────────────────────────────────
+const OBLAST_POSITIONS = [
+  {name:'Kharkiv',x:660,y:90,status:'progress'},
+  {name:'Dnipropetrovsk',x:580,y:170,status:'progress'},
+  {name:'Kyiv City',x:440,y:90,status:'on_track'},
+  {name:'Zaporizhzhia',x:590,y:210,status:'progress'},
+  {name:'Mykolaiv',x:510,y:240,status:'progress'},
+  {name:'Sumy',x:580,y:60,status:'progress'},
+  {name:'Donetsk (GCA)',x:690,y:160,status:'behind'},
+  {name:'Poltava',x:560,y:115,status:'on_track'},
+  {name:'Odessa',x:440,y:260,status:'progress'},
+  {name:'Lviv',x:220,y:110,status:'on_track'},
+  {name:'Kherson',x:540,y:260,status:'behind'},
+];
+
+function buildMap(){
+  const svg=document.getElementById('map-overview');
+  svg.innerHTML='';
+  // Background
+  const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bg.setAttribute('width',780);bg.setAttribute('height',280);bg.setAttribute('fill','#dde8f5');bg.setAttribute('rx',8);svg.appendChild(bg);
+  // Simplified Ukraine shape
+  const shape=document.createElementNS('http://www.w3.org/2000/svg','path');
+  shape.setAttribute('d','M180,60 Q280,30 380,40 Q480,30 560,50 Q640,45 700,70 Q740,90 730,130 Q720,160 700,190 Q680,220 640,240 Q580,260 520,270 Q460,280 400,275 Q340,280 280,265 Q220,260 180,240 Q150,220 145,180 Q140,150 150,120 Q160,90 180,60 Z');
+  shape.setAttribute('fill','#c8dff5');shape.setAttribute('stroke','#7ba7bc');shape.setAttribute('stroke-width',1.5);svg.appendChild(shape);
+  // Crimea note
+  const cri=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+  cri.setAttribute('cx',520);cri.setAttribute('cy',290);cri.setAttribute('rx',40);cri.setAttribute('ry',14);
+  cri.setAttribute('fill','#f1f5f9');cri.setAttribute('stroke','#94a3b8');cri.setAttribute('stroke-width',1);cri.setAttribute('stroke-dasharray','4,3');svg.appendChild(cri);
+  const criT=document.createElementNS('http://www.w3.org/2000/svg','text');
+  criT.setAttribute('x',520);criT.setAttribute('y',294);criT.setAttribute('text-anchor','middle');criT.setAttribute('fill','#94a3b8');criT.style.fontSize='8px';criT.textContent='Crimea (occupied)';svg.appendChild(criT);
+
+  const stColors={on_track:'#16a34a',progress:'#d97706',behind:'#dc2626'};
+  const tip=svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg','g'));
+  tip.style.pointerEvents='none';
+
+  OBLAST_POSITIONS.forEach(ob=>{
+    const col=stColors[ob.status]||'#94a3b8';
+    const rd=curRegion==='all'||ob.name===curRegion||ob.name.startsWith(curRegion)?1:0.3;
+    const grp=document.createElementNS('http://www.w3.org/2000/svg','g');
+    grp.style.cursor='pointer';grp.style.opacity=rd;
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',ob.x);c.setAttribute('cy',ob.y);c.setAttribute('r',18);
+    c.setAttribute('fill',col);c.setAttribute('stroke','#fff');c.setAttribute('stroke-width',2);
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',ob.x);t.setAttribute('y',ob.y+4);t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#fff');t.style.fontSize='8px';t.style.fontWeight='700';
+    t.textContent=ob.name.split(' ')[0].substring(0,6);
+    const lb=document.createElementNS('http://www.w3.org/2000/svg','text');
+    lb.setAttribute('x',ob.x);lb.setAttribute('y',ob.y+28);lb.setAttribute('text-anchor','middle');
+    lb.setAttribute('fill','#1F3864');lb.style.fontSize='8px';lb.style.fontWeight='600';lb.textContent=ob.name;
+    grp.appendChild(c);grp.appendChild(t);grp.appendChild(lb);
+    grp.addEventListener('mouseenter',function(){
+      const d=REGION_DATA[ob.name]||REGION_DATA.all;
+      tip.innerHTML='';
+      const tw=165,tx=Math.min(ob.x+22,760-tw),ty=Math.max(ob.y-70,4);
+      const box=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      box.setAttribute('x',tx);box.setAttribute('y',ty);box.setAttribute('width',tw);box.setAttribute('height',88);
+      box.setAttribute('fill','#1F3864');box.setAttribute('rx',7);box.setAttribute('opacity','0.97');tip.appendChild(box);
+      [[ob.name,16,'#fff','700'],[`Shelter: ${d.shelter.pct}% of target`,30,'#93c5fd','400'],
+       [`Teachers G8: ${Math.round(d.teacher.g8/d.teacher.g8t*100)}% of target`,44,'#fbbf24','400'],
+       [`Textbooks G8: ${Math.round(d.tlm.g8/d.tlm.g8t*100)}% of target`,58,'#6ee7b7','400'],
+       [`Transport: ${d.transport.students.toLocaleString()} students`,72,'#c4b5fd','400'],
+      ].forEach(([text,dy,fill,weight])=>{
+        const tx2=document.createElementNS('http://www.w3.org/2000/svg','text');
+        tx2.setAttribute('x',tx+8);tx2.setAttribute('y',ty+dy);tx2.setAttribute('fill',fill);
+        tx2.style.fontSize='9px';tx2.style.fontWeight=weight;tx2.textContent=text;tip.appendChild(tx2);
+      });
+    });
+    grp.addEventListener('mouseleave',()=>{tip.innerHTML='';});
+    svg.appendChild(grp);
+  });
+}
+
+// ─── DLI CARDS ──────────────────────────────────────────────────────────────
+const DLI_DATA=[
+  {id:1,title:'Updated shelter subvention allocation criteria',alloc:25,status:'achieved',pct:100,
+   dlrs:[{id:'1.1',text:'2024 criteria prioritises hub schools + DREAM system',status:'achieved'}]},
+  {id:2,title:'Students & teachers with access to constructed / rehabilitated shelters',alloc:65,status:'progress',pct:58,cur:18500,tgt:32000,
+   dlrs:[{id:'2.1',text:'32,000 beneficiaries target (scalable) · Dec 2025',status:'progress',cur:18500,tgt:32000}]},
+  {id:3,title:'Updated school bus subvention allocation criteria',alloc:25,status:'achieved',pct:100,
+   dlrs:[{id:'3.1',text:'Data-driven needs · streamlined redistribution mechanism',status:'achieved'}]},
+  {id:4,title:'Students with access to free bus transportation',alloc:35,status:'exceeded',pct:100,cur:18112,tgt:14000,
+   dlrs:[{id:'4.1',text:'18,112 students (target 14,000 · exceeded)',status:'exceeded',cur:18112,tgt:14000}]},
+  {id:5,title:'Teachers trained to implement the NUS reform',alloc:60,status:'progress',pct:67,
+   dlrs:[
+     {id:'5.1',text:'Training plan for G7, G8, G9 adopted',status:'achieved'},
+     {id:'5.2',text:'135,059 G7 teachers trained (target 60,000 · exceeded)',status:'exceeded',cur:135059,tgt:60000},
+     {id:'5.3',text:'28,400 G8 teachers trained (target 60,000) · Dec 2025',status:'progress',cur:28400,tgt:60000},
+   ]},
+  {id:6,title:'Students with access to NUS teaching & learning materials',alloc:94.9,status:'progress',pct:70,
+   dlrs:[
+     {id:'6.1',text:'2024 textbooks decree — 100% G7 including disabilities',status:'achieved'},
+     {id:'6.2',text:'397,570 G7 students (target 300,000 · exceeded)',status:'exceeded',cur:397570,tgt:300000},
+     {id:'6.3',text:'142,000 G8 students (AF target 337,000) · Dec 2025',status:'progress',cur:142000,tgt:337000},
+   ]},
+  {id:7,title:'Support for school network optimisation',alloc:49.6,status:'progress',pct:50,
+   dlrs:[
+     {id:'7.1',text:'2025 subvention formula updated (+50% min student requirement)',status:'achieved'},
+     {id:'7.2',text:'2026 subvention formula (+30% min student) · Sep 2025',status:'pending'},
+   ]},
+];
+
+let dliFilter='all';
+function setDliView(v,btn){
+  dliFilter=v;
+  document.querySelectorAll('#pg-dli .mbt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderDliCards();
+}
+function renderDliCards(){
+  const el=document.getElementById('dli-cards');
+  const stClass={achieved:'dli-achieved',exceeded:'dli-exceeded',progress:'dli-progress',pending:'dli-pending'};
+  const stPill={achieved:'s-ach',exceeded:'s-exc',progress:'s-prog',pending:'s-pend'};
+  const stLabel={achieved:'Achieved ✓',exceeded:'Exceeded ✓',progress:'In progress',pending:'Pending'};
+  const stIcon={achieved:'#16a34a',exceeded:'#1e40af',progress:'#d97706',pending:'#94a3b8'};
+  el.innerHTML=DLI_DATA.filter(d=>{
+    if(dliFilter==='all')return true;
+    if(dliFilter==='achieved')return d.status==='achieved'||d.status==='exceeded';
+    return d.status==='progress'||d.status==='pending';
+  }).map(d=>`
+    <div class="dli-card ${stClass[d.status]||'dli-pending'}">
+      <div class="dli-hdr">
+        <span class="dli-num">DLI ${d.id}</span>
+        <span style="display:flex;gap:6px;align-items:center">
+          <span class="dli-status ${stPill[d.status]}">${stLabel[d.status]}</span>
+          <span class="dli-alloc">$${d.alloc}M</span>
+        </span>
+      </div>
+      <div class="dli-title">${d.title}</div>
+      <div class="dli-progress-bar"><div class="dli-bar-fill" style="width:${Math.min(d.pct,100)}%;background:${stIcon[d.status]}"></div></div>
+      <div class="dli-meta" style="margin-bottom:8px">${d.cur?d.cur.toLocaleString()+' of '+d.tgt.toLocaleString()+' target':d.pct+'% complete'}</div>
+      ${d.dlrs.map(r=>`<div class="dlr-row">
+        <div class="dlr-icon" style="background:${stIcon[r.status]||'#94a3b8'};color:#fff">${r.status==='achieved'||r.status==='exceeded'?'✓':'→'}</div>
+        <span style="flex:1"><strong>DLR ${r.id}</strong> — ${r.text}</span>
+        ${r.cur?`<div style="font-size:9px;color:#64748b;white-space:nowrap">${Math.round(r.cur/r.tgt*100)}%</div>`:''}
+      </div>`).join('')}
+    </div>`).join('');
+}
+
+// ─── SHELTER TABLE ───────────────────────────────────────────────────────────
+let shelterView='progress';
+function setShelterView(v,btn){
+  shelterView=v;
+  document.querySelectorAll('#pg-shelters .mbt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('shelter-action').style.display=v==='action'?'block':'none';
+  if(v==='action'){
+    const rows=[
+      {ob:'Kherson',issue:'Most constrained by security — limited access for construction teams',pct:28},
+      {ob:'Donetsk (GCA)',issue:'Active front line proximity — site access restricted in 4 hromadas',pct:39},
+      {ob:'Zaporizhzhia',issue:'47% complete — procurement delays for structural materials',pct:47},
+    ];
+    document.getElementById('shelter-action-rows').innerHTML=rows.map(r=>`
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:11px;gap:10px">
+        <div><div style="font-weight:700;color:#1e293b">${r.ob}</div><div style="font-size:10px;color:#64748b;margin-top:2px">${r.issue}</div></div>
+        <span class="pill p-r">${r.pct}% complete</span>
+      </div>`).join('');
+  }
+}
+
+function buildShelterTable(){
+  const tbl=document.getElementById('tbl-shelters');
+  tbl.innerHTML='<thead><tr><th>Oblast</th><th style="text-align:center">Schools</th><th style="text-align:center">Beneficiaries</th><th style="text-align:center">Target</th><th style="text-align:right">Progress</th><th>Status</th></tr></thead><tbody id="tbl-sh-body"></tbody>';
+  const tb=document.getElementById('tbl-sh-body');
+  OBLASTS.forEach((ob,i)=>{
+    const d=(REGION_DATA[ob]||REGION_DATA.all).shelter;
+    const pct=d.pct;
+    const sCls=pct>=70?'p-a':pct>=50?'p-p':'p-r';
+    const sLbl=pct>=70?'On track':pct>=50?'In progress':'Attention needed';
+    tb.innerHTML+=`<tr><td style="font-weight:600">${ob}</td><td style="text-align:center">${d.schools}</td>
+      <td style="text-align:center">${d.ben.toLocaleString()}</td>
+      <td style="text-align:center;color:#64748b">${d.target.toLocaleString()}</td>
+      <td style="min-width:80px;text-align:right">
+        <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
+          <div class="pbar" style="width:70px"><div class="pbar-fill" style="width:${pct}%;background:${pct>=70?'#16a34a':pct>=50?'#d97706':'#dc2626'}"></div></div>
+          <span style="font-size:9px;color:#64748b;min-width:28px">${pct}%</span>
+        </div>
+      </td>
+      <td><span class="pill ${sCls}">${sLbl}</span></td></tr>`;
+  });
+}
+
+// ─── CHARTS ─────────────────────────────────────────────────────────────────
+function buildAllCharts(){
+  const d=REGION_DATA[curRegion]||REGION_DATA.all;
+
+  mkC('c-dli-status',{type:'doughnut',data:{labels:['Achieved','Exceeded','In progress','Pending'],datasets:[{data:[4,4,3,1],backgroundColor:['#16a34a','#0052A5','#d97706','#94a3b8'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:10,padding:5}}}}});
+
+  mkC('c-disb-trend',{type:'line',data:{labels:['Sep 2024','Dec 2024','Mar 2025','Jun 2025','Sep 2025','Dec 2025'],datasets:[
+    {label:'Actual disbursement ($M)',data:[0,65,120,180,202.8,null],borderColor:'#0052A5',backgroundColor:'rgba(0,82,165,0.1)',tension:.35,fill:true,pointRadius:4},
+    {label:'Projected trajectory ($M)',data:[0,80,160,240,300,354.5],borderColor:'#94a3b8',borderDash:[5,4],tension:.35,pointRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:9},boxWidth:10,padding:6}}},scales:{y:{beginAtZero:true,ticks:{...yt,callback:v=>'$'+v+'M'},grid:g},x:{ticks:xt,grid:{display:false}}}}});
+
+  mkC('c-shelter-bar',{type:'bar',data:{labels:OB_SHORT,datasets:[
+    {label:'Beneficiaries (current)',data:OBLASTS.map(ob=>(REGION_DATA[ob]||REGION_DATA.all).shelter.ben),backgroundColor:'#0052A5',borderRadius:3},
+    {label:'Oblast target',data:OBLASTS.map(ob=>(REGION_DATA[ob]||REGION_DATA.all).shelter.target),backgroundColor:'rgba(0,82,165,0.15)',borderRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:9},boxWidth:10,padding:6}}},scales:{y:{beginAtZero:true,ticks:yt,grid:g},x:{ticks:{font:{size:8}},grid:{display:false}}}}});
+
+  mkC('c-transport-bar',{type:'bar',data:{labels:OB_SHORT,datasets:[
+    {label:'Students with free transport',data:OBLASTS.map(ob=>(REGION_DATA[ob]||REGION_DATA.all).transport.students),backgroundColor:'#16a34a',borderRadius:3},
+    {label:'Oblast target',data:OBLASTS.map(ob=>(REGION_DATA[ob]||REGION_DATA.all).transport.target),backgroundColor:'rgba(22,163,74,0.15)',borderRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:9},boxWidth:10,padding:6}}},scales:{y:{beginAtZero:true,ticks:yt,grid:g},x:{ticks:{font:{size:8}},grid:{display:false}}}}});
+
+  mkC('c-transport2',{type:'doughnut',data:{labels:['Students with free bus access','Still to be reached (est.)'],datasets:[{data:[d.transport.students,Math.max(0,d.transport.target*1.5-d.transport.students)],backgroundColor:['#16a34a','#e2e8f0'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:10,padding:5}}}}});
+
+  mkC('c-teacher1',{type:'bar',data:{labels:['Grade 7','Grade 8','Grade 9 (planned)'],datasets:[
+    {label:'Trained to date',data:[d.teacher.g7,d.teacher.g8,0],backgroundColor:'#16a34a',borderRadius:3},
+    {label:'Target',data:[d.teacher.g7t,d.teacher.g8t,60000],backgroundColor:'rgba(22,163,74,0.15)',borderRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:9},boxWidth:10,padding:6}}},scales:{y:{beginAtZero:true,ticks:yt,grid:g},x:{ticks:xt,grid:{display:false}}}}});
+
+  mkC('c-teacher2',{type:'bar',data:{labels:OB_SHORT,datasets:[
+    {label:'G8 teachers trained',data:OBLASTS.map(ob=>(REGION_DATA[ob]||REGION_DATA.all).teacher.g8),backgroundColor:'#d97706',borderRadius:3},
+    {label:'G8 target',data:OBLASTS.map(ob=>(REGION_DATA[ob]||REGION_DATA.all).teacher.g8t),backgroundColor:'rgba(217,119,6,0.15)',borderRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:9},boxWidth:10,padding:6}}},scales:{y:{beginAtZero:true,ticks:yt,grid:g},x:{ticks:{font:{size:8}},grid:{display:false}}}}});
+
+  mkC('c-tlm1',{type:'bar',data:{labels:['G7 students (DLR 6.2)','G8 students (DLR 6.3)'],datasets:[
+    {label:'Received textbooks',data:[d.tlm.g7,d.tlm.g8],backgroundColor:['#16a34a','#d97706'],borderRadius:3},
+    {label:'Target',data:[d.tlm.g7t,d.tlm.g8t],backgroundColor:['rgba(22,163,74,0.15)','rgba(217,119,6,0.15)'],borderRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:9},boxWidth:10,padding:6}}},scales:{y:{beginAtZero:true,ticks:yt,grid:g},x:{ticks:xt,grid:{display:false}}}}});
+
+  mkC('c-tlm2',{type:'bar',data:{labels:OB_SHORT,datasets:[
+    {label:'G8 textbooks received',data:OBLASTS.map(ob=>(REGION_DATA[ob]||REGION_DATA.all).tlm.g8),backgroundColor:'#854d0e',borderRadius:3},
+    {label:'G8 target',data:OBLASTS.map(ob=>(REGION_DATA[ob]||REGION_DATA.all).tlm.g8t),backgroundColor:'rgba(133,77,14,0.15)',borderRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:9},boxWidth:10,padding:6}}},scales:{y:{beginAtZero:true,ticks:yt,grid:g},x:{ticks:{font:{size:8}},grid:{display:false}}}}});
+
+  mkC('c-dli-bar',{type:'bar',data:{labels:DLI_DATA.map(d=>'DLI '+d.id),datasets:[
+    {label:'Allocated ($M)',data:DLI_DATA.map(d=>d.alloc),backgroundColor:'rgba(0,82,165,0.2)',borderRadius:3},
+    {label:'Disbursed / achieved ($M)',data:[25,38,25,35,40,50,25],backgroundColor:'#0052A5',borderRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:9},boxWidth:10,padding:6}}},scales:{y:{beginAtZero:true,ticks:{...yt,callback:v=>'$'+v+'M'},grid:g},x:{ticks:xt,grid:{display:false}}}}});
+}
+
+// ─── REGION UPDATE ──────────────────────────────────────────────────────────
+function updateRegion(){
+  curRegion=document.getElementById('region-sel').value;
+  const d=REGION_DATA[curRegion]||REGION_DATA.all;
+  const isAll=curRegion==='all';
+  // Update overview cards
+  document.getElementById('ov-sec-title').textContent='Programme overview — '+(isAll?'all oblasts · National totals':curRegion+' oblast');
+  document.getElementById('sh-schools').textContent=d.shelter.schools;
+  document.getElementById('sh-ben').textContent=d.shelter.ben.toLocaleString();
+  document.getElementById('sh-bar1').style.width=d.shelter.pct+'%';
+  document.getElementById('sh-bar2').style.width=d.shelter.pct+'%';
+  document.getElementById('sh-pct1').textContent=d.shelter.pct+'% of target';
+  document.getElementById('sh-pct2').textContent=d.shelter.pct+'% of target';
+  document.getElementById('tch-g8').textContent=d.teacher.g8.toLocaleString();
+  document.getElementById('tch-g8-bar').style.width=Math.round(d.teacher.g8/d.teacher.g8t*100)+'%';
+  document.getElementById('tch-g8-pct').textContent=Math.round(d.teacher.g8/d.teacher.g8t*100)+'% of target';
+  document.getElementById('tlm-g7').textContent=d.tlm.g7.toLocaleString();
+  document.getElementById('tlm-g8').textContent=d.tlm.g8.toLocaleString();
+  const g8pct=Math.round(d.tlm.g8/d.tlm.g8t*100);
+  document.getElementById('tlm-g8-bar').style.width=g8pct+'%';
+  document.getElementById('tlm-g8-pct').textContent=g8pct+'% of target';
+  document.getElementById('tr-students').textContent=d.transport.students.toLocaleString();
+  document.getElementById('tr-disability').textContent=d.transport.disability;
+  buildMap();buildAllCharts();buildShelterTable();renderShelterPhotos();
+}
+
+
+
+// ─── TAB NAV ────────────────────────────────────────────────────────────────
+document.querySelector('.nav').addEventListener('click',function(e){
+  const tab=e.target.closest('.ntab');if(!tab)return;
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  tab.classList.add('on');
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-'+tab.dataset.tab).classList.add('on');
+  buildAllCharts();
+});
+
+// ─── FORM SELECTOR ──────────────────────────────────────────────────────────
+function showForm(name,btn){
+  ['shelter','teacher','textbook'].forEach(f=>document.getElementById('form-'+f).style.display='none');
+  document.getElementById('form-'+name).style.display='block';
+  document.querySelectorAll('#form-sel .mbt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+
+// ─── PHOTO EVIDENCE ─────────────────────────────────────────────────────────
+const SHELTER_PHOTOS = [
+  {icon:'&#127979;',bg:'#1e3a5f',label:'Shelter interior — completed works',
+   school:'Kharkiv Secondary School No. 47',code:'UA-KH-0847',oblast:'Kharkiv',
+   lat:'49.9923° N',lon:'36.2311° E',acc:'3.8 m',officer:'O. Kovalenko',
+   time:'14 Mar 2026 · 10:24 AM',id:'IMG_0314_KH047_1.jpg',item:'Structural reinforcement',sub:'SUB-SHLTR-20260314-KH047',status:'verified'},
+  {icon:'&#9889;',bg:'#1a3a2f',label:'Emergency lighting — all circuits tested',
+   school:'Kharkiv Secondary School No. 47',code:'UA-KH-0847',oblast:'Kharkiv',
+   lat:'49.9921° N',lon:'36.2314° E',acc:'4.1 m',officer:'O. Kovalenko',
+   time:'14 Mar 2026 · 10:28 AM',id:'IMG_0314_KH047_2.jpg',item:'Emergency lighting installed',sub:'SUB-SHLTR-20260314-KH047',status:'verified'},
+  {icon:'&#128688;',bg:'#3b1f5f',label:'Disability access ramp — entrance',
+   school:'Kharkiv Secondary School No. 47',code:'UA-KH-0847',oblast:'Kharkiv',
+   lat:'49.9920° N',lon:'36.2310° E',acc:'3.9 m',officer:'O. Kovalenko',
+   time:'14 Mar 2026 · 10:33 AM',id:'IMG_0314_KH047_3.jpg',item:'Disability access ramp + wide door',sub:'SUB-SHLTR-20260314-KH047',status:'verified'},
+  {icon:'&#127779;',bg:'#1e3a5f',label:'Shelter interior — seating capacity',
+   school:'Dnipro Gymnasium No. 12',code:'UA-DN-0124',oblast:'Dnipropetrovsk',
+   lat:'48.4648° N',lon:'35.0461° E',acc:'5.2 m',officer:'I. Savchenko',
+   time:'22 Feb 2026 · 09:14 AM',id:'IMG_0222_DN124_1.jpg',item:'Structural reinforcement',sub:'SUB-SHLTR-20260222-DN124',status:'verified'},
+  {icon:'&#127754;',bg:'#1a3a2f',label:'Ventilation shaft — intake and outlet',
+   school:'Dnipro Gymnasium No. 12',code:'UA-DN-0124',oblast:'Dnipropetrovsk',
+   lat:'48.4645° N',lon:'35.0464° E',acc:'6.1 m',officer:'I. Savchenko',
+   time:'22 Feb 2026 · 09:22 AM',id:'IMG_0222_DN124_2.jpg',item:'Ventilation system functional',sub:'SUB-SHLTR-20260222-DN124',status:'verified'},
+  {icon:'&#128683;',bg:'#3d1f1f',label:'Evacuation route signage',
+   school:'Sumy School No. 8',code:'UA-SM-0089',oblast:'Sumy',
+   lat:'50.9046° N',lon:'34.7981° E',acc:'6.1 m',officer:'T. Bondarenko',
+   time:'05 Mar 2026 · 11:42 AM',id:'IMG_0305_SM089_1.jpg',item:'Evacuation route marked and clear',sub:'SUB-SHLTR-20260305-SM089',status:'verified'},
+  {icon:'&#127979;',bg:'#1e3050',label:'Shelter interior — Zaporizhzhia',
+   school:'Zaporizhzhia School No. 31',code:'UA-ZP-0312',oblast:'Zaporizhzhia',
+   lat:'47.8388° N',lon:'35.1396° E',acc:'4.8 m',officer:'M. Kravchenko',
+   time:'18 Mar 2026 · 14:05 PM',id:'IMG_0318_ZP312_1.jpg',item:'Structural reinforcement',sub:'SUB-SHLTR-20260318-ZP312',status:'verified'},
+  {icon:'&#128692;',bg:'#3d2f0f',label:'Water supply — storage tank',
+   school:'Mykolaiv Secondary No. 5',code:'UA-MK-0054',oblast:'Mykolaiv',
+   lat:'46.9750° N',lon:'31.9943° E',acc:'5.5 m',officer:'Y. Petruk',
+   time:'11 Mar 2026 · 08:56 AM',id:'IMG_0311_MK054_1.jpg',item:'Water supply / sanitation',sub:'SUB-SHLTR-20260311-MK054',status:'pending'},
+];
+
+function renderShelterPhotos(){
+  const el=document.getElementById('shelter-photos');
+  if(!el)return;
+  // Filter by selected oblast
+  const filtered = curRegion==='all' ? SHELTER_PHOTOS :
+    SHELTER_PHOTOS.filter(p=>p.oblast===curRegion||p.oblast.startsWith(curRegion));
+  if(filtered.length===0){
+    el.innerHTML='<div style="color:#94a3b8;font-size:11px;padding:12px">No photo submissions for this oblast yet.</div>';
+    return;
+  }
+  // Group by school
+  const bySchool={};
+  filtered.forEach(p=>{
+    if(!bySchool[p.code])bySchool[p.code]={school:p.school,code:p.code,oblast:p.oblast,photos:[]};
+    bySchool[p.code].photos.push(p);
+  });
+  el.innerHTML=Object.values(bySchool).map(grp=>`
+    <div style="margin-bottom:14px">
+      <div style="background:#f1f5f9;border-radius:8px 8px 0 0;padding:7px 12px;border:1.5px solid #e2e8f0;border-bottom:none;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#003366">${grp.school}</div>
+          <div style="font-size:9px;color:#64748b;margin-top:1px">AIKOM: ${grp.code} &nbsp;·&nbsp; ${grp.oblast} oblast &nbsp;·&nbsp; ${grp.photos.length} photo${grp.photos.length!==1?'s':''} submitted</div>
+        </div>
+        <span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;background:#dcfce7;color:#166534">${grp.photos.every(p=>p.status==='verified')?'All verified':'Verification pending'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1.5px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;overflow:hidden">
+        ${grp.photos.map((p,i)=>`
+          <div class="photo-card" style="border-radius:0;border:none;border-right:${i<grp.photos.length-1?'1px solid #e2e8f0':'none'}" onclick="openLightbox('${p.id}')">
+            <div class="photo-frame">
+              <div class="photo-scene" style="background:${p.bg}">${p.icon}</div>
+              <div class="photo-gps-overlay">
+                <span class="coord">&#128205; ${p.lat} · ${p.lon}</span>
+                <span class="ts">&#128336; ${p.time}</span>
+              </div>
+              <div class="photo-verified">${p.status==='verified'?'&#9989;':'&#128336;'}</div>
+            </div>
+            <div class="photo-meta">
+              <div class="pm-title">${p.item}</div>
+              <div class="pm-sub" style="color:#94a3b8;font-size:9px">${p.id}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+const PHOTO_LOOKUP={};
+SHELTER_PHOTOS.forEach(p=>PHOTO_LOOKUP[p.id]=p);
+
+function openLightbox(id){
+  const p=PHOTO_LOOKUP[id];if(!p)return;
+  const lb=document.getElementById('lightbox');
+  const ph=document.getElementById('lb-photo');
+  while(ph.children.length>1)ph.removeChild(ph.lastChild);
+  ph.style.background=p.bg;
+  const ico=document.createElement('div');ico.style.fontSize='72px';ico.innerHTML=p.icon;ph.appendChild(ico);
+  const lbl=document.createElement('div');lbl.style.cssText='font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:4px';lbl.textContent=p.label;ph.appendChild(lbl);
+  document.getElementById('lb-lat').textContent=p.lat;
+  document.getElementById('lb-lon').textContent=p.lon;
+  document.getElementById('lb-acc').textContent=p.acc;
+  document.getElementById('lb-alt').textContent='—';
+  document.getElementById('lb-id').textContent=p.id;
+  document.getElementById('lb-time').textContent=p.time;
+  document.getElementById('lb-officer').textContent=p.officer;
+  document.getElementById('lb-school').textContent=p.code+' · '+p.school;
+  document.getElementById('lb-item').textContent=p.item;
+  document.getElementById('lb-sub').textContent=p.sub;
+  lb.classList.add('open');
+}
+function closeLightbox(e){if(e.target===document.getElementById('lightbox'))document.getElementById('lightbox').classList.remove('open');}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+function setShelterViewPlaceholder(v,btn){}
+function setTransportView(v,btn){
+  document.querySelectorAll('#pg-transport .mbt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('transport-insight').textContent=v==='disability'?'⚠ 118 / 234 students with disabilities — 50% of target':'✓ DLR 4.1 exceeded — 18,112 students (target: 14,000)';
+  document.getElementById('transport-insight').className='mb-ins '+(v==='disability'?'mi-w':'mi-g');
+}
+function setTeacherView(v,btn){
+  document.querySelectorAll('#pg-teachers .mbt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('teacher-insight').textContent=v==='gender'?'→ ~72% of trained teachers are female — above national average':v==='oblast'?'⚠ Donetsk and Kherson G8 training below 40% of target':'✓ G7 training exceeded — 135,059 trained (target: 60,000)';
+}
+function setTlmView(v,btn){
+  document.querySelectorAll('#pg-tlm .mbt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('tlm-insight').textContent=v==='inclusion'?'✓ 8,764 students with disabilities reached · Gender review: 1.33M copies printed':v==='oblast'?'⚠ Kherson and Donetsk G8 below 35% of target':'✓ G7 exceeded — 397,570 students (target 300,000)';
+}
+
+buildMap();buildAllCharts();buildShelterTable();renderShelterPhotos();renderDliCards();renderShelterPhotos();
+</script>
+</body>
+</html>
